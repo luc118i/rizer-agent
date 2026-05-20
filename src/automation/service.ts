@@ -14,27 +14,33 @@ import {
   saveRizerData,
   countFaltaTratativa,
 } from '../repo'
-import { getConfig } from '../config'
+import { getConfig, getRizerDisciplinaryUrl } from '../config'
+import { logger } from '../logger'
 import type { OccurrencePayload, OccurrenceData } from './types/automation.types'
 
 async function runAutomation(occurrenceData: OccurrenceData): Promise<string | null> {
   const cfg = getConfig()
+  const disciplinaryUrl = getRizerDisciplinaryUrl(cfg)
+  logger.info(`[runAutomation] Navegando para ${disciplinaryUrl}`)
+
   const { browser, context } = await createContextWithSession()
   const page = await context.newPage()
 
   try {
-    await page.goto(cfg.rizer_disciplinary_url)
+    await page.goto(disciplinaryUrl)
     await page.waitForLoadState('domcontentloaded')
 
     if (isOnLoginPage(page)) {
-      console.log('[service] Sessão inválida — fazendo login...')
+      logger.info('[runAutomation] Sessão inválida — fazendo login...')
       await login(page, context)
-      await page.goto(cfg.rizer_disciplinary_url)
+      await page.goto(disciplinaryUrl)
       await page.waitForLoadState('domcontentloaded')
     }
 
+    logger.info(`[runAutomation] Página carregada: ${page.url()}`)
     return await createDisciplinary(page, occurrenceData)
-  } catch (err) {
+  } catch (err: any) {
+    logger.error('[runAutomation] Erro:', err.message)
     await takeErrorScreenshot(page, 'service')
     throw err
   } finally {
@@ -169,7 +175,8 @@ export async function fillMedidaService(payload: OccurrencePayload): Promise<voi
   const page = await context.newPage()
 
   try {
-    await page.goto(cfg.rizer_disciplinary_url)
+    const disciplinaryUrl = getRizerDisciplinaryUrl(cfg)
+    await page.goto(disciplinaryUrl)
     await page.waitForLoadState('domcontentloaded')
 
     if (isOnLoginPage(page)) {

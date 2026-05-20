@@ -8,11 +8,15 @@ export interface AgentConfig {
   rizer_login_url: string
   rizer_email: string
   rizer_password: string
-  rizer_disciplinary_url: string
   google_service_account_json_b64: string
   google_drive_folder_id: string
   google_drive_medidas_folder_id: string
   headless?: boolean
+}
+
+export function getRizerDisciplinaryUrl(cfg: AgentConfig): string {
+  const origin = new URL(cfg.rizer_login_url).origin
+  return `${origin}/ocorrencias_disciplinares/new`
 }
 
 let cachedConfig: AgentConfig | null = null

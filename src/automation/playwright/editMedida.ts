@@ -5,7 +5,7 @@ import { getConfig } from '../../config'
 
 export async function fillMedidaOnEdit(page: Page, rizerId: string, linkMedida: string): Promise<void> {
   const cfg = getConfig()
-  const baseUrl = new URL(cfg.rizer_disciplinary_url).origin
+  const baseUrl = new URL(cfg.rizer_login_url).origin
 
   await page.goto(`${baseUrl}/ocorrencias_disciplinares/${rizerId}/edit`)
   await page.waitForLoadState('networkidle')

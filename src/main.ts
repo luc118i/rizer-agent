@@ -6,6 +6,7 @@ import { autoUpdater } from 'electron-updater'
 import { startServer } from './server'
 import type { AgentConfig } from './config'
 import { clearCachedConfig } from './config'
+import { getLogsDir } from './logger'
 
 let tray: Tray | null = null
 let configWin: BrowserWindow | null = null
@@ -55,6 +56,7 @@ function buildContextMenu(status: string): Electron.Menu {
 
   items.push(
     { label: 'Configurações', click: () => openConfigWindow() },
+    { label: 'Ver logs de automação', click: () => shell.openPath(getLogsDir()) },
     { label: 'Abrir pasta de dados', click: () => shell.openPath(app.getPath('userData')) },
     { type: 'separator' },
     { label: 'Sair', click: () => app.quit() },

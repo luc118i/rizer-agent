@@ -9,7 +9,7 @@ export async function findRizerOccurrenceId(page: Page, params: {
 }): Promise<string> {
   const { matricula, tipoOcorrencia, motoristaNome } = params
   const cfg = getConfig()
-  const baseUrl = new URL(cfg.rizer_disciplinary_url).origin
+  const baseUrl = new URL(cfg.rizer_login_url).origin
 
   const searchTerms: string[] = []
   if (matricula) searchTerms.push(matricula)

@@ -186,10 +186,6 @@
       <input type="url" id="rizer_login_url" placeholder="https://viacaocatedralocorrencias.rizerapps.com" />
     </div>
     <div class="field">
-      <label>URL — Nova Ocorrência Disciplinar</label>
-      <input type="url" id="rizer_disciplinary_url" placeholder="https://.../ocorrencias_disciplinares/create" />
-    </div>
-    <div class="field">
       <label>E-mail</label>
       <input type="text" id="rizer_email" placeholder="usuario@catedral.com.br" />
     </div>
@@ -253,7 +249,6 @@
     document.getElementById('supabase_url').value = cfg.supabase_url || ''
     document.getElementById('supabase_service_role_key').value = cfg.supabase_service_role_key || ''
     document.getElementById('rizer_login_url').value = cfg.rizer_login_url || ''
-    document.getElementById('rizer_disciplinary_url').value = cfg.rizer_disciplinary_url || ''
     document.getElementById('rizer_email').value = cfg.rizer_email || ''
     document.getElementById('rizer_password').value = cfg.rizer_password || ''
     document.getElementById('google_drive_folder_id').value = cfg.google_drive_folder_id || ''
@@ -284,7 +279,6 @@
       supabase_url: document.getElementById('supabase_url').value.trim(),
       supabase_service_role_key: document.getElementById('supabase_service_role_key').value.trim(),
       rizer_login_url: document.getElementById('rizer_login_url').value.trim(),
-      rizer_disciplinary_url: document.getElementById('rizer_disciplinary_url').value.trim(),
       rizer_email: document.getElementById('rizer_email').value.trim(),
       rizer_password: document.getElementById('rizer_password').value.trim(),
       google_service_account_json_b64: serviceAccountB64,

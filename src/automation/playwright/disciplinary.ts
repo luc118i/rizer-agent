@@ -3,7 +3,7 @@ import { ids } from './selectors'
 import type { OccurrenceData } from '../types/automation.types'
 import { takeErrorScreenshot } from './helpers'
 import { registerMotorista } from './motorista'
-import { getConfig } from '../../config'
+import { getConfig, getRizerDisciplinaryUrl } from '../../config'
 
 class MotoristaNotFoundError extends Error {
   constructor(msg: string) { super(msg); this.name = 'MotoristaNotFoundError' }
@@ -100,7 +100,7 @@ async function fillTextInput(page: Page, id: string, value: string): Promise<voi
 
 export async function createDisciplinary(page: Page, data: OccurrenceData): Promise<string | null> {
   const cfg = getConfig()
-  await page.goto(cfg.rizer_disciplinary_url)
+  await page.goto(getRizerDisciplinaryUrl(cfg))
   await page.waitForLoadState('networkidle')
 
   const pause = () => page.waitForTimeout(600)
@@ -111,7 +111,7 @@ export async function createDisciplinary(page: Page, data: OccurrenceData): Prom
     } catch (err) {
       if (!(err instanceof MotoristaNotFoundError)) throw err
       await registerMotorista(page, data)
-      await page.goto(cfg.rizer_disciplinary_url)
+      await page.goto(getRizerDisciplinaryUrl(cfg))
       await page.waitForLoadState('networkidle')
       await selectBsLiveSearch(page, ids.motorista, data.motorista_nome)
     }
