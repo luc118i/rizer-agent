@@ -16,7 +16,7 @@ export interface AgentConfig {
 
 export function getRizerDisciplinaryUrl(cfg: AgentConfig): string {
   const origin = new URL(cfg.rizer_login_url).origin
-  return `${origin}/ocorrencias_disciplinares/new`
+  return `${origin}/ocorrencias_disciplinares/create`
 }
 
 let cachedConfig: AgentConfig | null = null
