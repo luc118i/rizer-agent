@@ -97,7 +97,7 @@ export async function automateOccurrence(payload: OccurrencePayload): Promise<{ 
     base_operacional:  baseCode,
     data_ocorrencia:   `${occ.eventDate}T00:00:00`,
     ...responsible,
-    tipo_ocorrencia:   'PARADA IRREGULAR',
+    tipo_ocorrencia:   occ.occurrenceName ?? 'PARADA IRREGULAR',
     link_relatorio:    matchRelatorio.link,
     link_medida:       matchMedida?.link ?? '',
     advertencia,
@@ -171,7 +171,7 @@ export async function fillMedidaService(payload: OccurrencePayload): Promise<voi
       rizerOccId = await findRizerOccurrenceId(page, {
         matricula,
         motoristaNome,
-        tipoOcorrencia: 'PARADA IRREGULAR',
+        tipoOcorrencia: occ.occurrenceName ?? 'PARADA IRREGULAR',
         eventDate,
       })
     } else {
