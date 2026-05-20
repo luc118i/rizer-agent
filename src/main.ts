@@ -2,6 +2,7 @@ import { app, Tray, Menu, nativeImage, dialog, shell, BrowserWindow, ipcMain } f
 import path from 'path'
 import { spawnSync } from 'child_process'
 import fs from 'fs'
+import { autoUpdater } from 'electron-updater'
 import { startServer } from './server'
 import type { AgentConfig } from './config'
 import { clearCachedConfig } from './config'
@@ -9,6 +10,7 @@ import { clearCachedConfig } from './config'
 let tray: Tray | null = null
 let configWin: BrowserWindow | null = null
 let serverStarted = false
+let updateReady = false
 
 // Impede múltiplas instâncias
 const gotLock = app.requestSingleInstanceLock()
@@ -40,15 +42,58 @@ function buildTrayIcon(): Electron.NativeImage {
 }
 
 function buildContextMenu(status: string): Electron.Menu {
-  return Menu.buildFromTemplate([
+  const items: Electron.MenuItemConstructorOptions[] = [
     { label: 'RIZER Agent', enabled: false },
     { label: status, enabled: false },
     { type: 'separator' },
+  ]
+
+  if (updateReady) {
+    items.push({ label: '⬆ Instalar atualização e reiniciar', click: () => autoUpdater.quitAndInstall() })
+    items.push({ type: 'separator' })
+  }
+
+  items.push(
     { label: 'Configurações', click: () => openConfigWindow() },
     { label: 'Abrir pasta de dados', click: () => shell.openPath(app.getPath('userData')) },
     { type: 'separator' },
     { label: 'Sair', click: () => app.quit() },
-  ])
+  )
+
+  return Menu.buildFromTemplate(items)
+}
+
+function setupAutoUpdater(): void {
+  autoUpdater.autoDownload = true
+  autoUpdater.autoInstallOnAppQuit = true
+
+  autoUpdater.on('update-available', (info) => {
+    console.log(`[updater] Nova versão disponível: ${info.version}`)
+    tray?.setToolTip(`RIZER Agent — baixando v${info.version}...`)
+  })
+
+  autoUpdater.on('update-downloaded', () => {
+    updateReady = true
+    tray?.setToolTip('RIZER Agent — atualização pronta!')
+    tray?.setContextMenu(buildContextMenu('⬆ Atualização pronta — clique para instalar'))
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'RIZER Agent — Atualização',
+      message: 'Uma nova versão foi baixada. Clique em OK para instalar e reiniciar.',
+      buttons: ['Instalar agora', 'Depois'],
+    }).then(({ response }) => {
+      if (response === 0) autoUpdater.quitAndInstall()
+    })
+  })
+
+  autoUpdater.on('error', (err) => {
+    console.error('[updater] Erro:', err.message)
+  })
+
+  // Verifica na inicialização (só em produção)
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdates().catch(() => {})
+  }
 }
 
 // ── Janela de configuração ────────────────────────────────────────────────────
@@ -185,6 +230,7 @@ app.whenReady().then(async () => {
   setupPaths()
   app.setLoginItemSettings({ openAtLogin: true })
   registerIPC()
+  setupAutoUpdater()
 
   const icon = buildTrayIcon()
   tray = new Tray(icon)

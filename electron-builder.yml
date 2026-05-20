@@ -2,6 +2,12 @@ appId: com.catedral.rizer-agent
 productName: RIZER Agent
 copyright: Catedral Transportes
 
+publish:
+  provider: github
+  owner: luc118i
+  repo: rizer-agent
+  releaseType: release
+
 win:
   target: nsis
   icon: build/icon.ico
