@@ -30,7 +30,7 @@ async function runAutomation(occurrenceData: OccurrenceData): Promise<string | n
     await page.goto(disciplinaryUrl)
     await page.waitForLoadState('domcontentloaded')
 
-    if (isOnLoginPage(page)) {
+    if (await isOnLoginPage(page)) {
       logger.info('[runAutomation] Sessão inválida — fazendo login...')
       await login(page, context)
       logger.info(`[runAutomation] Login concluído — URL pós-login: ${page.url()}`)
@@ -181,7 +181,7 @@ export async function fillMedidaService(payload: OccurrencePayload): Promise<voi
     await page.goto(disciplinaryUrl)
     await page.waitForLoadState('domcontentloaded')
 
-    if (isOnLoginPage(page)) {
+    if (await isOnLoginPage(page)) {
       console.log('[service] Sessão inválida — fazendo login...')
       await login(page, context)
     }

@@ -25,33 +25,28 @@ export async function login(page: Page, context: BrowserContext): Promise<void> 
   await passInput.pressSequentially(cfg.rizer_password, { delay: 50 })
 
   await page.click('button[type="submit"]')
-  logger.info(`[login] Formulário enviado — aguardando redirect...`)
+  logger.info(`[login] Formulário enviado — aguardando sumir o formulário de login...`)
 
-  const base = loginBase(LOGIN_URL)
+  const loginInput = page.locator('input[placeholder="Digite seu usuário"]')
   try {
-    await page.waitForURL(
-      url => {
-        const u = url.toString()
-        return u !== base && u !== base + '/'
-      },
-      { timeout: 90000 }
-    )
+    await loginInput.waitFor({ state: 'hidden', timeout: 90000 })
   } catch {
     const currentUrl = page.isClosed() ? '(página fechada)' : page.url()
-    logger.error(`[login] waitForURL timeout — URL atual: ${currentUrl}`)
+    logger.error(`[login] Timeout — formulário ainda visível. URL atual: ${currentUrl}`)
     await takeErrorScreenshot(page, 'login')
     throw new Error(`Login no RIZER falhou — credenciais inválidas ou timeout. URL atual: ${currentUrl}`)
   }
 
-  logger.info(`[login] Redirect detectado → ${page.url()}`)
+  logger.info(`[login] Login bem-sucedido → ${page.url()}`)
   await page.waitForLoadState('networkidle')
   await saveSession(context)
   logger.info(`[login] Sessão salva com sucesso`)
 }
 
-export function isOnLoginPage(page: Page): boolean {
-  const cfg = getConfig()
-  const url = page.url()
-  const base = loginBase(cfg.rizer_login_url)
-  return url === base || url === base + '/' || url.includes('/login') || url.includes('/auth')
+export async function isOnLoginPage(page: Page): Promise<boolean> {
+  try {
+    return await page.locator('input[placeholder="Digite seu usuário"]').isVisible({ timeout: 3000 })
+  } catch {
+    return false
+  }
 }
