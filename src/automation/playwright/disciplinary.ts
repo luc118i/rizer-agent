@@ -4,6 +4,7 @@ import type { OccurrenceData } from '../types/automation.types'
 import { takeErrorScreenshot } from './helpers'
 import { registerMotorista } from './motorista'
 import { getConfig, getRizerDisciplinaryUrl } from '../../config'
+import { logger } from '../../logger'
 
 class MotoristaNotFoundError extends Error {
   constructor(msg: string) { super(msg); this.name = 'MotoristaNotFoundError' }
@@ -172,11 +173,22 @@ export async function createDisciplinary(page: Page, data: OccurrenceData): Prom
     const saveBtn = page.locator('button.form-group-btn-add-cadastrar, button[type="submit"]:has-text("Cadastrar")')
     await saveBtn.waitFor({ state: 'visible', timeout: 10000 })
     await saveBtn.click()
-    await page.waitForLoadState('networkidle', { timeout: 20000 })
+    logger.info(`[disciplinary] Formulário salvo — aguardando redirect com ID...`)
+
+    try {
+      await page.waitForURL(
+        url => /\/ocorrencias_disciplinares\/\d+/.test(url.toString()),
+        { timeout: 20000 }
+      )
+    } catch {
+      logger.warn(`[disciplinary] Timeout aguardando redirect — URL atual: ${page.url()}`)
+    }
+
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {})
 
     const urlMatch = page.url().match(/\/ocorrencias_disciplinares\/(\d+)/)
     const rizerId = urlMatch?.[1] ?? null
-    console.log(`[disciplinary] ID capturado no RIZER: ${rizerId}`)
+    logger.info(`[disciplinary] ID capturado no RIZER: ${rizerId ?? '(não encontrado)'} — URL: ${page.url()}`)
     return rizerId
   } catch (err) {
     await takeErrorScreenshot(page, 'disciplinary')
