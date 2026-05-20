@@ -6,7 +6,7 @@ function getScreenshotsDir(): string {
   return process.env['SCREENSHOTS_DIR'] ?? path.resolve(process.cwd(), 'screenshots')
 }
 
-export async function takeErrorScreenshot(page: Page, label: string): Promise<string> {
+export async function takeErrorScreenshot(page: Page, label: string): Promise<string | null> {
   const dir = getScreenshotsDir()
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
 
@@ -14,7 +14,12 @@ export async function takeErrorScreenshot(page: Page, label: string): Promise<st
   const filename = `error_${label}_${timestamp}.png`
   const filepath = path.join(dir, filename)
 
-  await page.screenshot({ path: filepath, fullPage: true })
-  console.error(`[helpers] Screenshot salvo: ${filepath}`)
-  return filepath
+  try {
+    await page.screenshot({ path: filepath, fullPage: true })
+    console.error(`[helpers] Screenshot salvo: ${filepath}`)
+    return filepath
+  } catch (e: any) {
+    console.error(`[helpers] Não foi possível tirar screenshot (${label}): ${e.message}`)
+    return null
+  }
 }

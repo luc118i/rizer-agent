@@ -2,6 +2,7 @@ import type { Page, BrowserContext } from 'playwright'
 import { saveSession } from './browser'
 import { takeErrorScreenshot } from './helpers'
 import { getConfig } from '../../config'
+import { logger } from '../../logger'
 
 function loginBase(loginUrl: string): string {
   return loginUrl.replace(/\/$/, '')
@@ -24,6 +25,7 @@ export async function login(page: Page, context: BrowserContext): Promise<void> 
   await passInput.pressSequentially(cfg.rizer_password, { delay: 50 })
 
   await page.click('button[type="submit"]')
+  logger.info(`[login] Formulário enviado — aguardando redirect...`)
 
   const base = loginBase(LOGIN_URL)
   try {
@@ -32,15 +34,19 @@ export async function login(page: Page, context: BrowserContext): Promise<void> 
         const u = url.toString()
         return u !== base && u !== base + '/'
       },
-      { timeout: 45000 }
+      { timeout: 90000 }
     )
   } catch {
+    const currentUrl = page.isClosed() ? '(página fechada)' : page.url()
+    logger.error(`[login] waitForURL timeout — URL atual: ${currentUrl}`)
     await takeErrorScreenshot(page, 'login')
-    throw new Error(`Login no RIZER falhou — credenciais inválidas ou timeout. URL atual: ${page.url()}`)
+    throw new Error(`Login no RIZER falhou — credenciais inválidas ou timeout. URL atual: ${currentUrl}`)
   }
 
+  logger.info(`[login] Redirect detectado → ${page.url()}`)
   await page.waitForLoadState('networkidle')
   await saveSession(context)
+  logger.info(`[login] Sessão salva com sucesso`)
 }
 
 export function isOnLoginPage(page: Page): boolean {

@@ -33,8 +33,10 @@ async function runAutomation(occurrenceData: OccurrenceData): Promise<string | n
     if (isOnLoginPage(page)) {
       logger.info('[runAutomation] Sessão inválida — fazendo login...')
       await login(page, context)
+      logger.info(`[runAutomation] Login concluído — URL pós-login: ${page.url()}`)
       await page.goto(disciplinaryUrl)
       await page.waitForLoadState('domcontentloaded')
+      logger.info(`[runAutomation] Navegou para formulário: ${page.url()}`)
     }
 
     logger.info(`[runAutomation] Página carregada: ${page.url()}`)
