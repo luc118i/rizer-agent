@@ -6,8 +6,18 @@ const SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 
 function getDriveClient() {
   const cfg = getConfig()
-  const json = Buffer.from(cfg.google_service_account_json_b64, 'base64').toString('utf-8')
-  const creds = JSON.parse(json)
+
+  if (!cfg.google_service_account_json_b64) {
+    throw new Error('Service Account do Google não configurada. Abra as Configurações do agente e selecione o arquivo JSON.')
+  }
+
+  let creds: any
+  try {
+    const json = Buffer.from(cfg.google_service_account_json_b64, 'base64').toString('utf-8')
+    creds = JSON.parse(json)
+  } catch {
+    throw new Error('Service Account do Google inválida. Abra as Configurações do agente e selecione novamente o arquivo JSON.')
+  }
 
   if (!creds.client_email || !creds.private_key) {
     throw new Error('Credenciais do Google malformadas: faltam client_email ou private_key')
