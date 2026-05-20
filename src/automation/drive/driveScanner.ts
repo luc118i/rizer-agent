@@ -19,8 +19,15 @@ function getDriveClient() {
     throw new Error('Service Account do Google inválida. Abra as Configurações do agente e selecione novamente o arquivo JSON.')
   }
 
+  if (creds.type && creds.type !== 'service_account') {
+    throw new Error(
+      `Arquivo incorreto: tipo "${creds.type}". É necessário uma Service Account (type: "service_account"), não OAuth2 Client. Crie uma Service Account no Google Cloud Console e baixe o JSON dela.`
+    )
+  }
+
   if (!creds.client_email || !creds.private_key) {
-    throw new Error('Credenciais do Google malformadas: faltam client_email ou private_key')
+    const keys = Object.keys(creds).join(', ')
+    throw new Error(`Credenciais do Google malformadas: faltam client_email ou private_key. Chaves encontradas: [${keys}]`)
   }
 
   const auth = new google.auth.JWT({ email: creds.client_email, key: creds.private_key, scopes: SCOPES })
