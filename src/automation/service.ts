@@ -81,7 +81,11 @@ export async function automateOccurrence(payload: OccurrencePayload): Promise<{ 
   const medidasFolderId = payload.medidas_folder_id || cfg.google_drive_medidas_folder_id
 
   const [matchRelatorio, matchMedida] = await Promise.all([
-    findReportLink({ ...driveParams, folderId: relatoriosFolderId, typeFilter: 'PARADA_IRREG' }),
+    findReportLink({
+      ...driveParams,
+      folderId: relatoriosFolderId,
+      ...(occ.driveFileNome ? { fileName: occ.driveFileNome } : {}),
+    }),
     advertencia
       ? findReportLink({ ...driveParams, folderId: medidasFolderId })
       : Promise.resolve(null),
