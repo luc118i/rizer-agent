@@ -8,7 +8,7 @@ export function getSupabaseAdmin(): SupabaseClient {
   if (_client) return _client
   const cfg = getConfig()
   _client = createClient(cfg.supabase_url, cfg.supabase_service_role_key, {
-    realtime: { transport: ws },
+    realtime: { transport: ws as any },
   })
   return _client
 }
