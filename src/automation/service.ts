@@ -5,6 +5,7 @@ import { login, isOnLoginPage } from './playwright/login'
 import { createDisciplinary } from './playwright/disciplinary'
 import { findRizerOccurrenceId } from './playwright/findOccurrenceInRizer'
 import { fillMedidaOnEdit } from './playwright/editMedida'
+import { verifyInRizer } from './playwright/verifyRizer'
 import { takeErrorScreenshot } from './playwright/helpers'
 import {
   getOccurrenceById,
@@ -204,6 +205,62 @@ export async function fillMedidaService(payload: OccurrencePayload): Promise<voi
     console.log(`[service] falta_tratativa removida para ocorrência ${occurrence_id}`)
   } catch (err) {
     await takeErrorScreenshot(page, 'fill_medida').catch(() => {})
+    throw err
+  } finally {
+    await browser.close()
+  }
+}
+
+export async function verifyOccurrenceService(payload: OccurrencePayload): Promise<{
+  registered: boolean
+  rizerId: string | null
+  hasTratativa: boolean
+}> {
+  const { occurrence_id } = payload
+  const occ = await getOccurrenceById(occurrence_id)
+
+  const driver1 = occ.drivers.find(d => d.position === 1)
+  if (!driver1) throw new Error('Motorista principal não encontrado.')
+
+  const matricula = driver1.registry ?? ''
+  const motoristaNome = driver1.name ?? ''
+  const tipoOcorrencia = occ.occurrenceName
+    ?? (occ.speedKmh != null ? speedToRizerName(occ.speedKmh) : 'PARADA IRREGULAR')
+
+  const { browser, context } = await createContextWithSession()
+  const page = await context.newPage()
+
+  try {
+    const cfg = getConfig()
+    await page.goto(getRizerDisciplinaryUrl(cfg))
+    await page.waitForLoadState('domcontentloaded')
+
+    if (await isOnLoginPage(page)) {
+      logger.info('[verifyOccurrence] Sessão inválida — fazendo login...')
+      await login(page, context)
+    }
+
+    const result = await verifyInRizer(page, {
+      matricula,
+      motoristaNome,
+      tipoOcorrencia,
+      rizerId: occ.rizerId,
+    })
+
+    // Sincroniza banco com o que foi encontrado
+    if (result.registered && result.rizerId) {
+      await saveRizerData(occurrence_id, { rizerId: result.rizerId })
+      await markRizerRegistered(occurrence_id)
+    }
+    if (result.registered && result.hasTratativa) {
+      await clearFaltaTratativa(occurrence_id)
+    } else if (result.registered && !result.hasTratativa && occ.advertencia) {
+      await markFaltaTratativa(occurrence_id)
+    }
+
+    return result
+  } catch (err) {
+    await takeErrorScreenshot(page, 'verify').catch(() => {})
     throw err
   } finally {
     await browser.close()

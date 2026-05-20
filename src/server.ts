@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { automateOccurrence, fillMedidaService, countFaltaTratativa } from './automation/service'
+import { automateOccurrence, fillMedidaService, countFaltaTratativa, verifyOccurrenceService } from './automation/service'
 
 export async function startServer(port: number): Promise<void> {
   const app = express()
@@ -29,6 +29,16 @@ export async function startServer(port: number): Promise<void> {
       res.json({ pendentes })
     } catch (err: any) {
       console.error('[server] /automation/fill-medida erro:', err.message)
+      res.status(500).json({ error: err.message })
+    }
+  })
+
+  app.post('/automation/verify', async (req, res) => {
+    try {
+      const result = await verifyOccurrenceService(req.body)
+      res.json(result)
+    } catch (err: any) {
+      console.error('[server] /automation/verify erro:', err.message)
       res.status(500).json({ error: err.message })
     }
   })
