@@ -1,0 +1,36 @@
+appId: com.catedral.rizer-agent
+productName: RIZER Agent
+copyright: Catedral Transportes
+
+win:
+  target: nsis
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: false
+  createDesktopShortcut: false
+  createStartMenuShortcut: true
+  runAfterFinish: true
+
+files:
+  - dist/**/*
+  - "!dist/**/*.map"
+
+extraResources:
+  - from: src/automation/csv
+    to: csv
+    filter:
+      - "**/*.csv"
+  - from: build/tray.png
+    to: tray.png
+  - from: src/renderer
+    to: renderer
+  - from: dist/preload.js
+    to: preload.js
+
+directories:
+  output: release
+  buildResources: build
+
+asar: true

@@ -1,0 +1,12 @@
+{
+  "supabase_url": "https://SEU_PROJECT.supabase.co",
+  "supabase_service_role_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "rizer_login_url": "https://viacaocatedralocorrencias.rizerapps.com/login",
+  "rizer_email": "seu@email.com",
+  "rizer_password": "SuaSenha",
+  "rizer_disciplinary_url": "https://viacaocatedralocorrencias.rizerapps.com/ocorrencias_disciplinares/create",
+  "google_service_account_json_b64": "eyJjbGllbnRfZW1haWwiOiIuLi4ifQ==",
+  "google_drive_folder_id": "ID_DA_PASTA_RELATORIOS",
+  "google_drive_medidas_folder_id": "ID_DA_PASTA_MEDIDAS",
+  "headless": false
+}

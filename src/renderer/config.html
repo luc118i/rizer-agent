@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'" />
+  <title>RIZER Agent — Configuração</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      font-size: 13px;
+    }
+
+    .header {
+      background: #1e293b;
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-icon { font-size: 20px; }
+    .header h1 { font-size: 15px; font-weight: 600; }
+    .header p { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+    .content { padding: 20px 24px; max-height: calc(100vh - 120px); overflow-y: auto; }
+
+    .section { margin-bottom: 20px; }
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+    .field-hint { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+
+    .input-wrap { position: relative; display: flex; }
+    input[type="text"], input[type="password"], input[type="url"] {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 12px;
+      background: white;
+      color: #1e293b;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.1); }
+
+    .toggle-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: 12px;
+      padding: 2px 4px;
+    }
+    .toggle-btn:hover { color: #374151; }
+
+    .json-row { display: flex; gap: 8px; }
+    .json-row input { flex: 1; }
+    .btn-pick {
+      padding: 7px 12px;
+      background: #f1f5f9;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+      color: #374151;
+      font-weight: 500;
+    }
+    .btn-pick:hover { background: #e2e8f0; }
+
+    .check-row { display: flex; align-items: center; gap: 8px; }
+    .check-row input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; }
+    .check-row label { font-size: 12px; color: #374151; cursor: pointer; margin-bottom: 0; }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 24px;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-test {
+      padding: 8px 16px;
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      color: #374151;
+    }
+    .btn-test:hover { background: #f8fafc; border-color: #94a3b8; }
+
+    .btn-save {
+      padding: 8px 20px;
+      background: #1e293b;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: auto;
+    }
+    .btn-save:hover { background: #334155; }
+    .btn-save:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    .status {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      display: none;
+    }
+    .status.ok { display: inline-block; background: #dcfce7; color: #166534; }
+    .status.err { display: inline-block; background: #fee2e2; color: #991b1b; }
+    .status.loading { display: inline-block; background: #fef9c3; color: #854d0e; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-icon">⚙️</span>
+  <div>
+    <h1>RIZER Agent — Configuração</h1>
+    <p>Preencha as credenciais para conectar ao sistema</p>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- SUPABASE -->
+  <div class="section">
+    <div class="section-title">Banco de Dados (Supabase)</div>
+
+    <div class="field">
+      <label>URL do Projeto</label>
+      <input type="url" id="supabase_url" placeholder="https://xxxx.supabase.co" />
+    </div>
+    <div class="field">
+      <label>Service Role Key</label>
+      <div class="input-wrap">
+        <input type="password" id="supabase_service_role_key" placeholder="eyJhbGci..." />
+        <button class="toggle-btn" onclick="togglePass('supabase_service_role_key', this)">👁</button>
+      </div>
+      <div class="field-hint">Encontre em: Supabase → Settings → API → service_role</div>
+    </div>
+  </div>
+
+  <!-- RIZER -->
+  <div class="section">
+    <div class="section-title">RIZER</div>
+
+    <div class="field">
+      <label>URL de Login</label>
+      <input type="url" id="rizer_login_url" placeholder="https://viacaocatedralocorrencias.rizerapps.com" />
+    </div>
+    <div class="field">
+      <label>URL — Nova Ocorrência Disciplinar</label>
+      <input type="url" id="rizer_disciplinary_url" placeholder="https://.../ocorrencias_disciplinares/create" />
+    </div>
+    <div class="field">
+      <label>E-mail</label>
+      <input type="text" id="rizer_email" placeholder="usuario@catedral.com.br" />
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <div class="input-wrap">
+        <input type="password" id="rizer_password" placeholder="••••••••" />
+        <button class="toggle-btn" onclick="togglePass('rizer_password', this)">👁</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GOOGLE DRIVE -->
+  <div class="section">
+    <div class="section-title">Google Drive (Service Account)</div>
+
+    <div class="field">
+      <label>Arquivo JSON da Service Account</label>
+      <div class="json-row">
+        <input type="text" id="json_preview" placeholder="Clique em 'Selecionar arquivo...' ou cole o base64" readonly style="background:#f8fafc;cursor:default;" />
+        <button class="btn-pick" onclick="pickJson()">📂 Selecionar arquivo...</button>
+      </div>
+      <div class="field-hint">Arquivo .json baixado do Google Cloud Console</div>
+    </div>
+    <div class="field">
+      <label>ID da Pasta — Relatórios</label>
+      <input type="text" id="google_drive_folder_id" placeholder="1ABC..." />
+      <div class="field-hint">O ID aparece na URL do Drive: /folders/<b>ID</b></div>
+    </div>
+    <div class="field">
+      <label>ID da Pasta — Medidas</label>
+      <input type="text" id="google_drive_medidas_folder_id" placeholder="1DEF..." />
+    </div>
+  </div>
+
+  <!-- OPÇÕES -->
+  <div class="section">
+    <div class="section-title">Opções</div>
+    <div class="check-row">
+      <input type="checkbox" id="headless" />
+      <label for="headless">Modo silencioso (não abre janela do Chrome durante automação)</label>
+    </div>
+  </div>
+
+  <div style="height: 60px;"></div>
+</div>
+
+<div class="footer">
+  <button class="btn-test" onclick="testConn()">🔌 Testar conexão</button>
+  <span class="status" id="status"></span>
+  <button class="btn-save" id="btn-save" onclick="save()">Salvar e iniciar</button>
+</div>
+
+<script>
+  // b64 da service account carregada
+  let serviceAccountB64 = ''
+
+  async function load() {
+    const cfg = await window.agent.getConfig()
+    if (!cfg) return
+    document.getElementById('supabase_url').value = cfg.supabase_url || ''
+    document.getElementById('supabase_service_role_key').value = cfg.supabase_service_role_key || ''
+    document.getElementById('rizer_login_url').value = cfg.rizer_login_url || ''
+    document.getElementById('rizer_disciplinary_url').value = cfg.rizer_disciplinary_url || ''
+    document.getElementById('rizer_email').value = cfg.rizer_email || ''
+    document.getElementById('rizer_password').value = cfg.rizer_password || ''
+    document.getElementById('google_drive_folder_id').value = cfg.google_drive_folder_id || ''
+    document.getElementById('google_drive_medidas_folder_id').value = cfg.google_drive_medidas_folder_id || ''
+    document.getElementById('headless').checked = cfg.headless || false
+    if (cfg.google_service_account_json_b64) {
+      serviceAccountB64 = cfg.google_service_account_json_b64
+      document.getElementById('json_preview').value = '✓ Credencial carregada'
+    }
+  }
+
+  async function pickJson() {
+    const result = await window.agent.pickJsonFile()
+    if (result) {
+      serviceAccountB64 = result.b64
+      document.getElementById('json_preview').value = `✓ ${result.name}`
+    }
+  }
+
+  function togglePass(id, btn) {
+    const el = document.getElementById(id)
+    if (el.type === 'password') { el.type = 'text'; btn.textContent = '🙈' }
+    else { el.type = 'password'; btn.textContent = '👁' }
+  }
+
+  function getFormConfig() {
+    return {
+      supabase_url: document.getElementById('supabase_url').value.trim(),
+      supabase_service_role_key: document.getElementById('supabase_service_role_key').value.trim(),
+      rizer_login_url: document.getElementById('rizer_login_url').value.trim(),
+      rizer_disciplinary_url: document.getElementById('rizer_disciplinary_url').value.trim(),
+      rizer_email: document.getElementById('rizer_email').value.trim(),
+      rizer_password: document.getElementById('rizer_password').value.trim(),
+      google_service_account_json_b64: serviceAccountB64,
+      google_drive_folder_id: document.getElementById('google_drive_folder_id').value.trim(),
+      google_drive_medidas_folder_id: document.getElementById('google_drive_medidas_folder_id').value.trim(),
+      headless: document.getElementById('headless').checked,
+    }
+  }
+
+  function setStatus(type, msg) {
+    const el = document.getElementById('status')
+    el.className = `status ${type}`
+    el.textContent = msg
+  }
+
+  async function testConn() {
+    setStatus('loading', '⏳ Testando...')
+    const result = await window.agent.testConnection(getFormConfig())
+    if (result.ok) setStatus('ok', '✓ ' + result.message)
+    else setStatus('err', '✗ ' + result.message)
+  }
+
+  async function save() {
+    const cfg = getFormConfig()
+    if (!cfg.supabase_url || !cfg.rizer_email || !cfg.rizer_password) {
+      setStatus('err', 'Preencha os campos obrigatórios')
+      return
+    }
+    const btn = document.getElementById('btn-save')
+    btn.disabled = true
+    btn.textContent = 'Salvando...'
+    await window.agent.saveConfig(cfg)
+    btn.textContent = 'Salvo ✓'
+    setStatus('ok', 'Configuração salva — agente iniciando...')
+    setTimeout(() => window.close(), 1500)
+  }
+
+  load()
+</script>
+</body>
+</html>
