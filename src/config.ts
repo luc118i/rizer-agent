@@ -17,6 +17,10 @@ export interface AgentConfig {
 
 let cachedConfig: AgentConfig | null = null
 
+export function clearCachedConfig(): void {
+  cachedConfig = null
+}
+
 export function getConfig(): AgentConfig {
   if (cachedConfig) return cachedConfig
 

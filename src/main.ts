@@ -4,6 +4,7 @@ import { spawnSync } from 'child_process'
 import fs from 'fs'
 import { startServer } from './server'
 import type { AgentConfig } from './config'
+import { clearCachedConfig } from './config'
 
 let tray: Tray | null = null
 let configWin: BrowserWindow | null = null
@@ -97,8 +98,8 @@ function registerIPC(): void {
   ipcMain.handle('save-config', async (_e, cfg: AgentConfig) => {
     fs.mkdirSync(path.dirname(getConfigPath()), { recursive: true })
     fs.writeFileSync(getConfigPath(), JSON.stringify(cfg, null, 2), 'utf-8')
+    clearCachedConfig()
 
-    // Reinicia o servidor se ainda não estava rodando
     if (!serverStarted) {
       try {
         await tryStartServer()
