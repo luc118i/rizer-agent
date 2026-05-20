@@ -42,6 +42,12 @@ async function runAutomation(occurrenceData: OccurrenceData): Promise<string | n
   }
 }
 
+function speedToRizerName(kmh: number): string {
+  if (kmh > 105) return 'EXCESSO DE VELOCIDADE (>105)'
+  if (kmh >= 100) return 'EXCESSO DE VELOCIDADE (>=100 <=105)'
+  return 'EXCESSO DE VELOCIDADE ( >=90 <=99)'
+}
+
 export async function automateOccurrence(payload: OccurrencePayload): Promise<{ faltaTratativa: boolean }> {
   const { occurrence_id } = payload
   const cfg = getConfig()
@@ -97,7 +103,8 @@ export async function automateOccurrence(payload: OccurrencePayload): Promise<{ 
     base_operacional:  baseCode,
     data_ocorrencia:   `${occ.eventDate}T00:00:00`,
     ...responsible,
-    tipo_ocorrencia:   occ.occurrenceName ?? 'PARADA IRREGULAR',
+    tipo_ocorrencia:   occ.occurrenceName
+      ?? (occ.speedKmh != null ? speedToRizerName(occ.speedKmh) : 'PARADA IRREGULAR'),
     link_relatorio:    matchRelatorio.link,
     link_medida:       matchMedida?.link ?? '',
     advertencia,
@@ -171,7 +178,8 @@ export async function fillMedidaService(payload: OccurrencePayload): Promise<voi
       rizerOccId = await findRizerOccurrenceId(page, {
         matricula,
         motoristaNome,
-        tipoOcorrencia: occ.occurrenceName ?? 'PARADA IRREGULAR',
+        tipoOcorrencia: occ.occurrenceName
+          ?? (occ.speedKmh != null ? speedToRizerName(occ.speedKmh) : 'PARADA IRREGULAR'),
         eventDate,
       })
     } else {
