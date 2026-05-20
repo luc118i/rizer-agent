@@ -2,6 +2,7 @@ export interface OccurrencePayload {
   occurrence_id: string
   relatorios_folder_id?: string
   medidas_folder_id?: string
+  advertencia?: boolean
 }
 
 export interface AIExtractedData {

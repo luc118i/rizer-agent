@@ -83,7 +83,7 @@ export async function automateOccurrence(payload: OccurrencePayload): Promise<{ 
     ...(eventDate ? { eventDate } : {}),
   }
 
-  const advertencia = occ.advertencia ?? true
+  const advertencia = payload.advertencia ?? occ.advertencia ?? true
 
   const relatoriosFolderId = payload.relatorios_folder_id || cfg.google_drive_folder_id
   const medidasFolderId = payload.medidas_folder_id || cfg.google_drive_medidas_folder_id
