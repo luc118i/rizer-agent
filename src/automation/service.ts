@@ -57,6 +57,12 @@ function speedToRizerName(kmh: number): string {
   return 'EXCESSO DE VELOCIDADE ( >=90 <=99)'
 }
 
+function defaultTipoOcorrencia(occ: { typeCode: string | null; speedKmh: number | null }): string {
+  if (occ.typeCode === 'ANALISE_OP') return 'DESCUMPRIMENTO ESQUEMA OPERACIONAL'
+  if (occ.speedKmh != null) return speedToRizerName(occ.speedKmh)
+  return 'PARADA IRREGULAR'
+}
+
 export async function automateOccurrence(payload: OccurrencePayload): Promise<{ faltaTratativa: boolean }> {
   const { occurrence_id } = payload
   const cfg = getConfig()
@@ -85,6 +91,7 @@ export async function automateOccurrence(payload: OccurrencePayload): Promise<{ 
   }
 
   const advertencia = payload.advertencia ?? occ.advertencia ?? true
+  const suspensao = payload.suspensao ?? false
 
   const relatoriosFolderId = payload.relatorios_folder_id || cfg.google_drive_folder_id
   const medidasFolderId = payload.medidas_folder_id || cfg.google_drive_medidas_folder_id
@@ -117,10 +124,11 @@ export async function automateOccurrence(payload: OccurrencePayload): Promise<{ 
     data_ocorrencia:   `${occ.eventDate}T00:00:00`,
     ...responsible,
     tipo_ocorrencia:   occ.occurrenceName
-      ?? (occ.speedKmh != null ? speedToRizerName(occ.speedKmh) : 'PARADA IRREGULAR'),
+      ?? (defaultTipoOcorrencia(occ)),
     link_relatorio:    matchRelatorio.link,
     link_medida:       matchMedida?.link ?? '',
     advertencia,
+    suspensao,
   }
 
   const rizerId = await runAutomation(occurrenceData)
@@ -193,7 +201,7 @@ export async function fillMedidaService(payload: OccurrencePayload): Promise<voi
         matricula,
         motoristaNome,
         tipoOcorrencia: occ.occurrenceName
-          ?? (occ.speedKmh != null ? speedToRizerName(occ.speedKmh) : 'PARADA IRREGULAR'),
+          ?? (defaultTipoOcorrencia(occ)),
         eventDate,
       })
     } else {
@@ -215,6 +223,8 @@ export async function verifyOccurrenceService(payload: OccurrencePayload): Promi
   registered: boolean
   rizerId: string | null
   hasTratativa: boolean
+  advertencia: boolean
+  suspensao: boolean
 }> {
   const { occurrence_id } = payload
   const occ = await getOccurrenceById(occurrence_id)
@@ -225,7 +235,7 @@ export async function verifyOccurrenceService(payload: OccurrencePayload): Promi
   const matricula = driver1.registry ?? ''
   const motoristaNome = driver1.name ?? ''
   const tipoOcorrencia = occ.occurrenceName
-    ?? (occ.speedKmh != null ? speedToRizerName(occ.speedKmh) : 'PARADA IRREGULAR')
+    ?? (defaultTipoOcorrencia(occ))
 
   const { browser, context } = await createContextWithSession()
   const page = await context.newPage()
@@ -245,6 +255,7 @@ export async function verifyOccurrenceService(payload: OccurrencePayload): Promi
       motoristaNome,
       tipoOcorrencia,
       rizerId: occ.rizerId,
+      dataOcorrencia: occ.eventDate as string | undefined,
     })
 
     // Sincroniza banco com o que foi encontrado
@@ -254,7 +265,8 @@ export async function verifyOccurrenceService(payload: OccurrencePayload): Promi
     }
     if (result.registered && result.hasTratativa) {
       await clearFaltaTratativa(occurrence_id)
-    } else if (result.registered && !result.hasTratativa && occ.advertencia) {
+    } else if (result.registered && !result.hasTratativa && result.advertencia) {
+      // usa o estado real lido do RIZER (não o valor do banco local)
       await markFaltaTratativa(occurrence_id)
     }
 
