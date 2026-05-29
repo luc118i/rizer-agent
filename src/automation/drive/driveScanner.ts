@@ -50,6 +50,12 @@ function normalize(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().trim()
 }
 
+function isoToFileDateStr(isoDate: string): string {
+  // '2026-05-29' → '29.05.26'
+  const [y, m, d] = isoDate.split('T')[0]!.split('-')
+  return `${d}.${m}.${y!.slice(2)}`
+}
+
 export async function findReportLink(params: {
   matricula: string
   motoristaNome: string
@@ -58,23 +64,31 @@ export async function findReportLink(params: {
   eventDate?: string
   typeFilter?: string
   fileName?: string
+  /** Quando true, ignora o filtro de data no nome do arquivo (fileDateStr).
+   *  Use para buscas de medida/tratativa, cujo nome usa data de upload, não data do evento. */
+  skipFileDateFilter?: boolean
 }): Promise<DriveMatch | null> {
   const drive = getDriveClient()
   const cfg = getConfig()
-  const { matricula, motoristaNome, folderId = cfg.google_drive_folder_id, eventDate, typeFilter, fileName } = params
+  const { matricula, motoristaNome, folderId = cfg.google_drive_folder_id, eventDate, typeFilter, fileName, skipFileDateFilter } = params
 
   const dateFilter = eventDate ? ` and createdTime >= '${eventDate}T00:00:00'` : ''
 
   if (fileName) {
-    const res = await drive.files.list({
-      q: `'${folderId}' in parents and name = '${fileName}' and trashed = false`,
-      fields: 'files(id, name, webViewLink)',
-      pageSize: 1,
-    })
-    const file = res.data.files?.[0]
-    if (file?.webViewLink && file.name) {
-      console.log(`[driveScanner] match direto por nome: ${file.name}`)
-      return { link: file.webViewLink, fileName: file.name }
+    // Tenta match exato, depois com .pdf, depois sem .pdf (cobre inconsistências de extensão)
+    const namesToTry = [fileName, fileName.endsWith('.pdf') ? fileName.slice(0, -4) : fileName + '.pdf']
+    for (const candidate of namesToTry) {
+      const escaped = candidate.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+      const res = await drive.files.list({
+        q: `'${folderId}' in parents and name = '${escaped}' and trashed = false`,
+        fields: 'files(id, name, webViewLink)',
+        pageSize: 1,
+      })
+      const file = res.data.files?.[0]
+      if (file?.webViewLink && file.name) {
+        console.log(`[driveScanner] match direto por nome: ${file.name}`)
+        return { link: file.webViewLink, fileName: file.name }
+      }
     }
   }
 
@@ -90,9 +104,17 @@ export async function findReportLink(params: {
   const files = res.data.files ?? []
   console.log(`[driveScanner] ${files.length} arquivo(s) para "${searchTerm}" na pasta ${folderId}`)
 
+  // fileDateStr é usado para confirmar a data no nome do arquivo, mas o nome usa data de upload,
+  // não data do evento. Desativa quando: (a) já temos fileName direto, ou (b) caller pediu skip.
+  const fileDateStr = (eventDate && !fileName && !skipFileDateFilter)
+    ? isoToFileDateStr(eventDate.split('T')[0]!)
+    : null
+
   for (const file of files) {
     if (!file.name) continue
     const normFile = normalize(file.name.replace(/\.[^.]+$/, ''))
+
+    if (fileDateStr && !file.name.includes(fileDateStr)) continue
 
     if (typeFilter && !normFile.includes(normalize(typeFilter))) {
       continue

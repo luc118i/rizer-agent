@@ -77,7 +77,8 @@ export async function automateOccurrence(payload: OccurrencePayload): Promise<{ 
   if (!driver1) throw new Error('Motorista principal não encontrado na ocorrência.')
 
   const baseCode = driver1.baseCode ?? occ.baseCode ?? ''
-  const responsible = await resolveResponsible(baseCode)
+  const baseCodeForResponsible = occ.baseCode ?? driver1.baseCode ?? ''
+  const responsible = await resolveResponsible(baseCodeForResponsible)
 
   const matricula = driver1.registry ?? ''
   const motoristaNome = driver1.name ?? ''
@@ -103,7 +104,7 @@ export async function automateOccurrence(payload: OccurrencePayload): Promise<{ 
       ...(occ.driveFileNome ? { fileName: occ.driveFileNome } : {}),
     }),
     advertencia
-      ? findReportLink({ ...driveParams, folderId: medidasFolderId })
+      ? findReportLink({ ...driveParams, folderId: medidasFolderId, skipFileDateFilter: true })
       : Promise.resolve(null),
   ])
 
@@ -176,8 +177,8 @@ export async function fillMedidaService(payload: OccurrencePayload): Promise<voi
     motoristaNome,
     base: baseCode,
     folderId: medidasFolderId,
-    fileName: driveFileNome ?? undefined,
     ...(eventDate ? { eventDate } : {}),
+    skipFileDateFilter: true,
   })
 
   if (!matchMedida) throw new Error('Link da medida ainda não encontrado no Drive.')
